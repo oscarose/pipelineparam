@@ -1,0 +1,104 @@
+- hosts: all
+  gather_facts: yes
+  become: true
+  become_method: sudo
+  become_user: root
+  
+  tasks:
+  - name: Get Artifacts
+    get_url:
+      url: http://18.208.182.9:8081/artifactory/CD-MY-STAGE/{{ item }}
+      url_username: "{{ artifactory_user }}"
+      url_password: "{{ artifactory_password }}"
+      dest: "{{ install_dir }}"
+      owner: "{{ app_user }}"
+      mode: 0755
+    with_items:
+     - jdk-8u202-linux-x64.tar.gz
+     - apache-tomcat-8.5.37.tar.gz
+     - tomcat
+    become: true
+    become_method: sudo
+    become_user: root 
+
+  - name: Unarchive Package
+    unarchive: src="{{ install_dir }}/jdk-8u202-linux-x64.tar.gz"
+      dest="{{ install_dir }}"
+      copy=no
+      owner="{{ app_user }}"
+      mode=0755
+    become: true
+    become_method: sudo
+    become_user: root
+
+  - name: Unarchive package
+    unarchive: src="{{ install_dir }}/apache-tomcat-8.5.37.tar.gz"
+       dest="{{ install_dir }}"
+       copy=no
+       owner="{{ app_user }}"
+       mode=0755
+    become: true
+    become_method: sudo
+    become_user: root
+ 
+  - name: Make Java available for system
+    command: "{{ item }}"
+    with_items:
+    - alternatives --install /usr/bin/java java {{ install_dir }}/{{ java_name }}/bin/java 2
+    - alternatives --install /usr/bin/jar jar {{ install_dir }}/{{ java_name }}/bin/jar 2
+    - alternatives --install /usr/bin/javac javac {{ install_dir }}/{{ java_name }}/bin/javac 2
+    - alternatives --set jar {{ install_dir }}/{{ java_name }}/bin/jar
+    - alternatives --set javac {{ install_dir }}/{{ java_name }}/bin/javac
+
+  - name: Set environment Variables
+    shell: "{{ item }}"
+    with_items:
+    - export JAVA_HOME={{ install_dir }}/{{ java_name }}
+    - export JRE_HOME={{ install_dir }}/{{ java_name }}/jre
+    - export PATH=$PATH:{{ install_dir }}/{{ java_name }}/bin:{{ install_dir }}/{{ java_name }}/jre/bin
+
+  - name: Add java path in .bash_profile
+    lineinfile:
+      dest=/root/.bash_profile
+      state=present
+      insertbefore=export
+      line='PATH=$PATH:/opt'
+      
+  - name: Touch file
+    command: touch /usr/lib/systemd/system/tomcat.service
+    
+  - name: Write tomcat startupscript to /usr/lib/systemd/system/tomcat.service
+    command: cp {{ install_dir }}/tomcat /usr/lib/systemd/system/tomcat.service 
+
+  - name: Add to the tomcat-users.xml file
+    lineinfile:
+      dest={{ install_dir }}/{{ tomcat_version }}/conf/tomcat-users.xml
+      state=present
+      insertbefore=^</tomcat-users>
+      line='<user username="oscarose" password="oscarose" roles="tomcat,admin-gui,manager-gui,manager-script"/>'
+
+  - name: Make sure tomcat runs on boot, and start the service
+    command: systemctl enable tomcat.service
+  
+  - name: Get Artifacts
+    get_url:
+      url: http://18.208.182.9:8081/artifactory/CD-MY-STAGE/{{ item }}
+      url_username: "{{ artifactory_user }}"
+      url_password: "{{ artifactory_password }}"
+      dest: "{{ jenkins_dir }}"
+      owner: "{{ app_user }}"
+      mode: 0755
+    with_items:
+     - jenkins.war
+    become: true
+    become_method: sudo
+    become_user: root
+    
+  - name: Chown all to tomcat
+    shell: /bin/chown -R "{{ app_user }}". "{{ install_dir }}"/*
+  
+  - name: start jenkins service
+    command: systemctl start tomcat.service
+    
+ # - name: clear /opt directory
+  #  shell: /bin/rm -rf "{{ install_dir }}"/*
