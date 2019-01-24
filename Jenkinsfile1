@@ -1,6 +1,6 @@
 node {
     stage('checkout git') {
-        git url: 'https://github.com/oscarose/hello-world.git'
+        git url: 'https://github.com/oscarose/pipelineparam.git'
     }
     parameters {
         string(name: 'install_dir', defaultValue: '/opt', description: 'Tomcat dir')
