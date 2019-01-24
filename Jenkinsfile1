@@ -6,7 +6,7 @@ node {
         string(name: 'install_dir', defaultValue: '/opt', description: 'Tomcat dir')
         string(name: 'jenkins_dir', defaultValue: '/opt/apache-tomcat-8.5.37/webapps', description: 'defining jenkins dir')
         string(name: 'java_name', defaultValue: 'jdk1.8.0_202', description: 'defining java name')
-        string(name: 'Server_IP', defaultValue: '', description: 'node to deploy ansible')
+        //string(name: 'Server_IP', defaultValue: '', description: 'node to deploy ansible')
         string(name: 'tomcat_version', defaultValue: 'apache-tomcat-8.5.37', description: 'defining tomcat version')
         string(name: 'app_user', defaulyValue: 'tomcat', description: 'defining app name')
         choice(name: 'Ansible_Playbook', choices: ['pipeline.yaml', 'none', 'prof.yaml'], description: 'Playbook to Run')
