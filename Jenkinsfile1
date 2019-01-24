@@ -16,6 +16,6 @@ node {
     }
     stage('deploy ansible playbook') {
         sh 'echo running ansible playbook'
-        sh 'ansible-playbook -i "${Server_IP}," -k -b --extra-vars "app_user=${app_user} artifactory_user=${artifactory_user} artifactory_password=${artifactory_password} ansible_ssh_pass=${ssh_pwd} ansible_become_pass=${ssh_pwd} tomcat_version=${tomcat_version} install_dir=${install_dir} jenkins_dir=${jenkins_dir} java_name=${java_name} Server_IP=${Server_IP}" ${WORKSPACE}/pipline.yaml'
+        sh 'ansible-playbook -i "${Server_IP}," -k -b --extra-vars "app_user=${app_user} artifactory_user=${artifactory_user} artifactory_password=${artifactory_password} ansible_ssh_pass=${ssh_pwd} ansible_become_pass=${ssh_pwd} tomcat_version=${tomcat_version} install_dir=${params.install_dir} jenkins_dir=${jenkins_dir} java_name=${java_name} Server_IP=${Server_IP}" ${WORKSPACE}/pipline.yaml'
     }
 }
